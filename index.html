@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GEX Scanner</title>
+<title>Turbo Scanner</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0d1117; color: #e6edf3; font-family: monospace; font-size: 12px; }
@@ -19,28 +19,21 @@
   table { border-collapse: separate; border-spacing: 0; min-width: 100%; margin-top: 10px; }
   th { background: #161b22; color: #8b949e; padding: 6px 10px; text-align: center; border: 1px solid #30363d; white-space: nowrap; position: sticky; top: 0; z-index: 2; }
   th.strike-col { position: sticky; left: 0; z-index: 3; background: #161b22; }
-  td { padding: 4px 8px; text-align: center; border: 1px solid #21262d; white-space: nowrap; min-width: 60px; transition: all 0.2s; }
+  td { padding: 4px 8px; text-align: center; border: 1px solid #21262d; white-space: nowrap; min-width: 60px; }
   td.strike { background: #161b22; color: #8b949e; font-weight: bold; position: sticky; left: 0; z-index: 1; }
   td.current-price { background: #1f6feb !important; color: white !important; }
   tr.current-row td { outline: 2px solid #1f6feb; }
-
-  /* Primary node row — gold glow */
   tr.primary-row td { border-top: 2px solid #f0c040 !important; border-bottom: 2px solid #f0c040 !important; }
   tr.primary-row td:first-child { border-left: 3px solid #f0c040 !important; }
   tr.primary-row td:last-child { border-right: 3px solid #f0c040 !important; }
-  tr.primary-row { filter: drop-shadow(0 0 6px rgba(240,192,64,0.6)); }
-
-  /* Secondary node rows — blue glow */
   tr.secondary-row td { border-top: 2px solid #58a6ff !important; border-bottom: 2px solid #58a6ff !important; }
   tr.secondary-row td:first-child { border-left: 3px solid #58a6ff !important; }
   tr.secondary-row td:last-child { border-right: 3px solid #58a6ff !important; }
-  tr.secondary-row { filter: drop-shadow(0 0 4px rgba(88,166,255,0.5)); }
-
   .legend { display: flex; gap: 16px; padding: 8px 20px; font-size: 11px; color: #8b949e; flex-wrap: wrap; align-items: center; }
   .legend-item { display: flex; align-items: center; gap: 6px; }
   .legend-box { width: 14px; height: 14px; border-radius: 3px; }
-  .legend-primary { width: 14px; height: 14px; border: 2px solid #f0c040; border-radius: 3px; box-shadow: 0 0 6px rgba(240,192,64,0.7); }
-  .legend-secondary { width: 14px; height: 14px; border: 2px solid #58a6ff; border-radius: 3px; box-shadow: 0 0 4px rgba(88,166,255,0.6); }
+  .legend-primary { width: 14px; height: 14px; border: 2px solid #f0c040; border-radius: 3px; }
+  .legend-secondary { width: 14px; height: 14px; border: 2px solid #58a6ff; border-radius: 3px; }
   .loading { text-align: center; padding: 60px; color: #8b949e; font-size: 16px; }
   .error { color: #f85149; padding: 20px; }
   .tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
@@ -50,9 +43,25 @@
   .summary-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
   .summary-card .label { color: #8b949e; font-size: 11px; }
   .summary-card .value { font-size: 15px; font-weight: bold; margin-top: 2px; }
+  .trade-section { margin: 0 20px 20px; }
+  .trade-section h2 { color: #58a6ff; font-size: 14px; margin-bottom: 10px; }
+  .quick-rec { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .quick-rec-item { display: flex; flex-direction: column; gap: 2px; }
+  .quick-rec-item .qlabel { color: #8b949e; font-size: 10px; }
+  .quick-rec-item .qval { font-size: 13px; font-weight: bold; }
+  .setup-cards { display: flex; gap: 12px; flex-wrap: wrap; }
+  .setup-card { background: #161b22; border-radius: 8px; padding: 14px; flex: 1; min-width: 200px; }
+  .setup-card.bull { border: 1px solid #238636; }
+  .setup-card.bear { border: 1px solid #da3633; }
+  .setup-card h3 { font-size: 13px; margin-bottom: 10px; }
+  .setup-card.bull h3 { color: #3fb950; }
+  .setup-card.bear h3 { color: #f85149; }
+  .setup-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #21262d; font-size: 12px; }
+  .setup-row:last-child { border-bottom: none; }
+  .setup-row .slabel { color: #8b949e; }
+  .setup-row .sval { font-weight: bold; }
 </style>
 </head>
-<body>
 <body>
 
 <div id="lock-screen" style="
@@ -76,20 +85,8 @@
   </p>
 </div>
 
-<script>
-function checkPass() {
-  const input = document.getElementById('pass-input').value;
-  if (input === 'flourish!1') {
-    document.getElementById('lock-screen').style.display = 'none';
-  } else {
-    document.getElementById('pass-error').style.display = 'block';
-  }
-}
-</script>
-
- 
 <div class="header">
-  <h1>⚡ GEX Scanner</h1>
+  <h1>⚡ Turbo Scanner</h1>
   <div class="controls">
     <input id="ticker" value="AAPL" placeholder="Ticker" />
     <button onclick="analyze()">Analyze</button>
@@ -108,14 +105,25 @@ function checkPass() {
 <div class="legend">
   <div class="legend-item"><div class="legend-box" style="background:#1a4731"></div> Positive GEX</div>
   <div class="legend-item"><div class="legend-box" style="background:#4a1515"></div> Negative GEX</div>
-  <div class="legend-item"><div class="legend-primary"></div> Primary Wall</div>
-  <div class="legend-item"><div class="legend-secondary"></div> Secondary Wall</div>
+  <div class="legend-item"><div class="legend-primary"></div> Primary Wall 👑</div>
+  <div class="legend-item"><div class="legend-secondary"></div> Secondary Wall ◆</div>
+  <div class="legend-item">🔮 Price Magnet</div>
 </div>
 
 <div class="status" id="status">Enter a ticker and tap Analyze</div>
+<div id="trade-rec" style="display:none" class="trade-section"></div>
 <div class="table-wrap" id="output"><div class="loading">Ready — enter a ticker above 🎯</div></div>
 
 <script>
+function checkPass() {
+  const input = document.getElementById('pass-input').value;
+  if (input === 'flourish!1') {
+    document.getElementById('lock-screen').style.display = 'none';
+  } else {
+    document.getElementById('pass-error').style.display = 'block';
+  }
+}
+
 const TRADIER_TOKEN = "LBjBNjSes1nhLpZhAwJlbpbs44hH";
 const BASE = "https://sandbox.tradier.com/v1";
 let currentTab = "gex";
@@ -153,28 +161,16 @@ function calcGEX(option, spot) {
 }
 
 function colorCell(val, rank) {
-  // rank: 'primary', 'secondary', or null
-  const intensity = Math.min(Math.abs(val) / 5, 1);
   if (val === 0) return `background:#0d1117;color:#444`;
-
+  const intensity = Math.min(Math.abs(val) / 5, 1);
   if (val > 0) {
-    if (rank === 'primary') {
-      const g = Math.round(120 + intensity * 135);
-      return `background:rgb(10,${g},30);color:#ffffff;font-weight:bold;font-size:13px`;
-    } else if (rank === 'secondary') {
-      const g = Math.round(80 + intensity * 100);
-      return `background:rgb(10,${g},30);color:#afffb8;font-weight:bold`;
-    }
+    if (rank === 'primary') return `background:rgb(10,180,30);color:#ffffff;font-weight:bold;font-size:13px`;
+    if (rank === 'secondary') return `background:rgb(10,120,30);color:#afffb8;font-weight:bold`;
     const g = Math.round(40 + intensity * 80);
     return `background:rgb(10,${g},30);color:#3fb950`;
   } else {
-    if (rank === 'primary') {
-      const r = Math.round(160 + intensity * 95);
-      return `background:rgb(${r},15,15);color:#ffffff;font-weight:bold;font-size:13px`;
-    } else if (rank === 'secondary') {
-      const r = Math.round(100 + intensity * 80);
-      return `background:rgb(${r},15,15);color:#ffaaaa;font-weight:bold`;
-    }
+    if (rank === 'primary') return `background:rgb(220,15,15);color:#ffffff;font-weight:bold;font-size:13px`;
+    if (rank === 'secondary') return `background:rgb(140,15,15);color:#ffaaaa;font-weight:bold`;
     const r = Math.round(60 + intensity * 100);
     return `background:rgb(${r},15,15);color:#f85149`;
   }
@@ -195,24 +191,113 @@ function switchTab(tab) {
   if (lastData) renderTable(lastData);
 }
 
+function buildTradeRec(spot, gexByStrike, expirations) {
+  const sorted = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const primaryStrike = Number(sorted[0]?.[0]);
+  const secondaryStrikes = [Number(sorted[1]?.[0]), Number(sorted[2]?.[0])];
+
+  const totalGEX = Object.values(gexByStrike).reduce((a,b) => a+b, 0);
+  const isBullish = totalGEX > 0;
+
+  // Find nearest resistance above and support below
+  const strikesAbove = Object.keys(gexByStrike).map(Number).filter(s => s > spot).sort((a,b) => a-b);
+  const strikesBelow = Object.keys(gexByStrike).map(Number).filter(s => s < spot).sort((a,b) => b-a);
+
+  const nearestResistance = strikesAbove[0] || spot + 5;
+  const nearestSupport = strikesBelow[0] || spot - 5;
+
+  // Pick nearest expiry (2nd one for a bit more time)
+  const recExp = expirations[1] || expirations[0];
+  const recExpShort = recExp.replace(/\d{4}-/, "");
+
+  // Call setup
+  const callStrike = strikesAbove.find(s => s > spot) || nearestResistance;
+  const callTarget = secondaryStrikes.find(s => s > callStrike) || callStrike + 5;
+  const callStop = nearestSupport;
+
+  // Put setup
+  const putStrike = strikesBelow.find(s => s < spot) || nearestSupport;
+  const putTarget = secondaryStrikes.find(s => s < putStrike) || putStrike - 5;
+  const putStop = nearestResistance;
+
+  const bias = isBullish ? "🟢 BULLISH" : "🔴 BEARISH";
+  const biasColor = isBullish ? "#3fb950" : "#f85149";
+
+  return `
+    <h2>⚡ Trade Recommendations</h2>
+    <div class="quick-rec">
+      <div class="quick-rec-item">
+        <span class="qlabel">GEX BIAS</span>
+        <span class="qval" style="color:${biasColor}">${bias}</span>
+      </div>
+      <div class="quick-rec-item">
+        <span class="qlabel">PRICE</span>
+        <span class="qval" style="color:#58a6ff">$${spot}</span>
+      </div>
+      <div class="quick-rec-item">
+        <span class="qlabel">🔮 MAGNET</span>
+        <span class="qval" style="color:#f0c040">$${primaryStrike}</span>
+      </div>
+      <div class="quick-rec-item">
+        <span class="qlabel">CALL PLAY</span>
+        <span class="qval" style="color:#3fb950">$${callStrike}C ${recExpShort}</span>
+      </div>
+      <div class="quick-rec-item">
+        <span class="qlabel">PUT PLAY</span>
+        <span class="qval" style="color:#f85149">$${putStrike}P ${recExpShort}</span>
+      </div>
+    </div>
+    <div class="setup-cards">
+      <div class="setup-card bull">
+        <h3>📈 BULL SETUP — $${callStrike} Call ${recExpShort}</h3>
+        <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#3fb950">Price reclaims $${spot} on 15min close</span></div>
+        <div class="setup-row"><span class="slabel">Entry</span><span class="sval">Buy $${callStrike} Call exp ${recExpShort}</span></div>
+        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#3fb950">$${nearestResistance}</span></div>
+        <div class="setup-row"><span class="slabel">Target 2</span><span class="sval" style="color:#3fb950">$${callTarget}</span></div>
+        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#f85149">Below $${callStop}</span></div>
+        <div class="setup-row"><span class="slabel">Confirmation</span><span class="sval">15min candle close + volume</span></div>
+      </div>
+      <div class="setup-card bear">
+        <h3>📉 BEAR SETUP — $${putStrike} Put ${recExpShort}</h3>
+        <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#f85149">Price rejected at $${spot} on 15min close</span></div>
+        <div class="setup-row"><span class="slabel">Entry</span><span class="sval">Buy $${putStrike} Put exp ${recExpShort}</span></div>
+        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#f85149">$${nearestSupport}</span></div>
+        <div class="setup-row"><span class="slabel">Target 2</span><span class="sval" style="color:#f85149">$${putTarget}</span></div>
+        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#3fb950">Above $${putStop}</span></div>
+        <div class="setup-row"><span class="slabel">Confirmation</span><span class="sval">15min candle close + volume</span></div>
+      </div>
+    </div>
+  `;
+}
+
 function renderTable(data) {
   const { strikeMap, expirations, spot, gexByStrike } = data;
-  const strikes = Object.keys(strikeMap).map(Number).sort((a,b) => b - a);
+  const allStrikes = Object.keys(strikeMap).map(Number).sort((a,b) => b - a);
 
   const sorted = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
   const primaryStrike = Number(sorted[0]?.[0]);
   const secondaryStrikes = new Set([Number(sorted[1]?.[0]), Number(sorted[2]?.[0])]);
 
-  const closestStrike = strikes.reduce((a,b) => Math.abs(a-spot) < Math.abs(b-spot) ? a : b);
+  const closestStrike = allStrikes.reduce((a,b) => Math.abs(a-spot) < Math.abs(b-spot) ? a : b);
+  const closestIdx = allStrikes.indexOf(closestStrike);
+
+  // 🔮 Price magnet — strike with highest positive GEX nearest to price
+  const magnetStrike = Object.entries(gexByStrike)
+    .filter(([s,v]) => v > 0)
+    .sort((a,b) => Math.abs(Number(a[0])-spot) - Math.abs(Number(b[0])-spot))[0]?.[0];
+
+  // Filter to 10 above and 10 below
+  const visibleStrikes = allStrikes.filter((s, i) => i >= closestIdx - 10 && i <= closestIdx + 10);
 
   let html = `<table><tr><th class="strike-col">STRIKE</th>`;
   expirations.forEach(e => { html += `<th>${e.replace(/\d{4}-/,"")}</th>`; });
   html += `</tr>`;
 
-  strikes.forEach(strike => {
+  visibleStrikes.forEach(strike => {
     const isPrimary = strike === primaryStrike;
     const isSecondary = secondaryStrikes.has(strike);
     const isCurrent = strike === closestStrike;
+    const isMagnet = String(strike) === String(magnetStrike) && !isCurrent;
     const rank = isPrimary ? 'primary' : isSecondary ? 'secondary' : null;
 
     let rowClass = "";
@@ -222,15 +307,18 @@ function renderTable(data) {
 
     html += `<tr class="${rowClass.trim()}">`;
 
-    // Strike label
     let strikeLabel = `$${strike}`;
-    if (isPrimary) strikeLabel += ` 👑`;
+    if (isCurrent) strikeLabel += ` 📍`;
+    else if (isPrimary) strikeLabel += ` 👑`;
     else if (isSecondary) strikeLabel += ` ◆`;
+    if (isMagnet) strikeLabel += ` 🔮`;
 
     let strikeStyle = isPrimary
-      ? `color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,0.8);`
+      ? `color:#f0c040;`
       : isSecondary
-      ? `color:#58a6ff;text-shadow:0 0 6px rgba(88,166,255,0.7);`
+      ? `color:#58a6ff;`
+      : isCurrent
+      ? ``
       : ``;
 
     html += `<td class="strike ${isCurrent ? 'current-price' : ''}" style="${strikeStyle}">${strikeLabel}</td>`;
@@ -270,12 +358,12 @@ async function analyze() {
   document.getElementById("status").textContent = `Loading ${ticker}...`;
   document.getElementById("output").innerHTML = `<div class="loading">Fetching options chain for ${ticker}... ⏳</div>`;
   document.getElementById("summary").innerHTML = "";
+  document.getElementById("trade-rec").style.display = "none";
   document.getElementById("price-badge").style.display = "none";
 
   try {
     const [spot, expirations] = await Promise.all([getQuote(ticker), getExpirations(ticker)]);
     const exps = expirations.slice(0, 8);
-    document.getElementById("status").textContent = `Got ${exps.length} expirations, loading chains...`;
 
     const chains = await Promise.all(exps.map(e => getChain(ticker, e)));
 
@@ -317,7 +405,12 @@ async function analyze() {
 
     lastData = { strikeMap, expirations: exps, spot, gexByStrike };
     renderTable(lastData);
-    document.getElementById("status").textContent = `✅ ${ticker} — ${Object.keys(strikeMap).length} strikes × ${exps.length} expirations loaded`;
+
+    const tradeRec = document.getElementById("trade-rec");
+    tradeRec.innerHTML = buildTradeRec(spot, gexByStrike, exps);
+    tradeRec.style.display = "block";
+
+    document.getElementById("status").textContent = `✅ ${ticker} — showing 10 strikes above & below $${spot}`;
 
   } catch(err) {
     document.getElementById("output").innerHTML = `<div class="error">❌ Error: ${err.message}<br><br>Check your token and try again.</div>`;
