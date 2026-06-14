@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEX Scanner</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: monospace; font-size: 12px; }
+  .header { background: #161b22; padding: 12px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #30363d; flex-wrap: wrap; }
+  .header h1 { color: #58a6ff; font-size: 18px; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  input { background: #21262d; border: 1px solid #30363d; color: #e6edf3; padding: 6px 12px; border-radius: 6px; font-size: 14px; width: 100px; }
+  button { background: #238636; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:hover { background: #2ea043; }
+  .status { padding: 8px 20px; font-size: 12px; color: #8b949e; }
+  .price-badge { background: #1f6feb; color: white; padding: 2px 10px; border-radius: 10px; font-size: 12px; }
+  .table-wrap { overflow: auto; padding: 0 10px 20px; }
+  table { border-collapse: separate; border-spacing: 0; min-width: 100%; margin-top: 10px; }
+  th { background: #161b22; color: #8b949e; padding: 6px 10px; text-align: center; border: 1px solid #30363d; white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+  th.strike-col { position: sticky; left: 0; z-index: 3; background: #161b22; }
+  td { padding: 4px 8px; text-align: center; border: 1px solid #21262d; white-space: nowrap; min-width: 60px; transition: all 0.2s; }
+  td.strike { background: #161b22; color: #8b949e; font-weight: bold; position: sticky; left: 0; z-index: 1; }
+  td.current-price { background: #1f6feb !important; color: white !important; }
+  tr.current-row td { outline: 2px solid #1f6feb; }
+
+  /* Primary node row — gold glow */
+  tr.primary-row td { border-top: 2px solid #f0c040 !important; border-bottom: 2px solid #f0c040 !important; }
+  tr.primary-row td:first-child { border-left: 3px solid #f0c040 !important; }
+  tr.primary-row td:last-child { border-right: 3px solid #f0c040 !important; }
+  tr.primary-row { filter: drop-shadow(0 0 6px rgba(240,192,64,0.6)); }
+
+  /* Secondary node rows — blue glow */
+  tr.secondary-row td { border-top: 2px solid #58a6ff !important; border-bottom: 2px solid #58a6ff !important; }
+  tr.secondary-row td:first-child { border-left: 3px solid #58a6ff !important; }
+  tr.secondary-row td:last-child { border-right: 3px solid #58a6ff !important; }
+  tr.secondary-row { filter: drop-shadow(0 0 4px rgba(88,166,255,0.5)); }
+
+  .legend { display: flex; gap: 16px; padding: 8px 20px; font-size: 11px; color: #8b949e; flex-wrap: wrap; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-box { width: 14px; height: 14px; border-radius: 3px; }
+  .legend-primary { width: 14px; height: 14px; border: 2px solid #f0c040; border-radius: 3px; box-shadow: 0 0 6px rgba(240,192,64,0.7); }
+  .legend-secondary { width: 14px; height: 14px; border: 2px solid #58a6ff; border-radius: 3px; box-shadow: 0 0 4px rgba(88,166,255,0.6); }
+  .loading { text-align: center; padding: 60px; color: #8b949e; font-size: 16px; }
+  .error { color: #f85149; padding: 20px; }
+  .tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
+  .tab { padding: 6px 14px; border-radius: 6px 6px 0 0; cursor: pointer; color: #8b949e; border: 1px solid #30363d; border-bottom: none; background: #161b22; }
+  .tab.active { color: #e6edf3; background: #21262d; border-color: #58a6ff; }
+  .summary { display: flex; gap: 16px; padding: 8px 20px; flex-wrap: wrap; }
+  .summary-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .summary-card .label { color: #8b949e; font-size: 11px; }
+  .summary-card .value { font-size: 15px; font-weight: bold; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ GEX Scanner</h1>
+  <div class="controls">
+    <input id="ticker" value="AAPL" placeholder="Ticker" />
+    <button onclick="analyze()">Analyze</button>
+  </div>
+  <span id="price-badge" class="price-badge" style="display:none"></span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('gex')">GEX</div>
+  <div class="tab" onclick="switchTab('oi')">OI</div>
+  <div class="tab" onclick="switchTab('volume')">Volume</div>
+</div>
+
+<div class="summary" id="summary"></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-box" style="background:#1a4731"></div> Positive GEX</div>
+  <div class="legend-item"><div class="legend-box" style="background:#4a1515"></div> Negative GEX</div>
+  <div class="legend-item"><div class="legend-primary"></div> Primary Wall</div>
+  <div class="legend-item"><div class="legend-secondary"></div> Secondary Wall</div>
+</div>
+
+<div class="status" id="status">Enter a ticker and tap Analyze</div>
+<div class="table-wrap" id="output"><div class="loading">Ready — enter a ticker above 🎯</div></div>
+
+<script>
+const TRADIER_TOKEN = "LBjBNjSes1nhLpZhAwJlbpbs44hH";
+const BASE = "https://sandbox.tradier.com/v1";
+let currentTab = "gex";
+let lastData = null;
+
+async function getQuote(ticker) {
+  const r = await fetch(`${BASE}/markets/quotes?symbols=${ticker}`, {
+    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
+  });
+  const d = await r.json();
+  return d.quotes.quote.last;
+}
+
+async function getExpirations(ticker) {
+  const r = await fetch(`${BASE}/markets/options/expirations?symbol=${ticker}&includeAllRoots=true`, {
+    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
+  });
+  const d = await r.json();
+  return d.expirations.date;
+}
+
+async function getChain(ticker, exp) {
+  const r = await fetch(`${BASE}/markets/options/chains?symbol=${ticker}&expiration=${exp}&greeks=true`, {
+    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
+  });
+  const d = await r.json();
+  return d.options?.option || [];
+}
+
+function calcGEX(option, spot) {
+  const gamma = option.greeks?.gamma || 0;
+  const oi = option.open_interest || 0;
+  const mult = option.option_type === "put" ? -1 : 1;
+  return gamma * oi * 100 * spot * spot * mult / 1e9;
+}
+
+function colorCell(val, rank) {
+  // rank: 'primary', 'secondary', or null
+  const intensity = Math.min(Math.abs(val) / 5, 1);
+  if (val === 0) return `background:#0d1117;color:#444`;
+
+  if (val > 0) {
+    if (rank === 'primary') {
+      const g = Math.round(120 + intensity * 135);
+      return `background:rgb(10,${g},30);color:#ffffff;font-weight:bold;font-size:13px`;
+    } else if (rank === 'secondary') {
+      const g = Math.round(80 + intensity * 100);
+      return `background:rgb(10,${g},30);color:#afffb8;font-weight:bold`;
+    }
+    const g = Math.round(40 + intensity * 80);
+    return `background:rgb(10,${g},30);color:#3fb950`;
+  } else {
+    if (rank === 'primary') {
+      const r = Math.round(160 + intensity * 95);
+      return `background:rgb(${r},15,15);color:#ffffff;font-weight:bold;font-size:13px`;
+    } else if (rank === 'secondary') {
+      const r = Math.round(100 + intensity * 80);
+      return `background:rgb(${r},15,15);color:#ffaaaa;font-weight:bold`;
+    }
+    const r = Math.round(60 + intensity * 100);
+    return `background:rgb(${r},15,15);color:#f85149`;
+  }
+}
+
+function fmt(val) {
+  if (val === 0) return "";
+  const abs = Math.abs(val);
+  if (abs >= 1000) return (val/1000).toFixed(1) + "K";
+  return val.toFixed(1);
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach((t,i) => {
+    t.classList.toggle("active", ["gex","oi","volume"][i] === tab);
+  });
+  if (lastData) renderTable(lastData);
+}
+
+function renderTable(data) {
+  const { strikeMap, expirations, spot, gexByStrike } = data;
+  const strikes = Object.keys(strikeMap).map(Number).sort((a,b) => b - a);
+
+  const sorted = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const primaryStrike = Number(sorted[0]?.[0]);
+  const secondaryStrikes = new Set([Number(sorted[1]?.[0]), Number(sorted[2]?.[0])]);
+
+  const closestStrike = strikes.reduce((a,b) => Math.abs(a-spot) < Math.abs(b-spot) ? a : b);
+
+  let html = `<table><tr><th class="strike-col">STRIKE</th>`;
+  expirations.forEach(e => { html += `<th>${e.replace(/\d{4}-/,"")}</th>`; });
+  html += `</tr>`;
+
+  strikes.forEach(strike => {
+    const isPrimary = strike === primaryStrike;
+    const isSecondary = secondaryStrikes.has(strike);
+    const isCurrent = strike === closestStrike;
+    const rank = isPrimary ? 'primary' : isSecondary ? 'secondary' : null;
+
+    let rowClass = "";
+    if (isCurrent) rowClass += " current-row";
+    if (isPrimary) rowClass += " primary-row";
+    else if (isSecondary) rowClass += " secondary-row";
+
+    html += `<tr class="${rowClass.trim()}">`;
+
+    // Strike label
+    let strikeLabel = `$${strike}`;
+    if (isPrimary) strikeLabel += ` 👑`;
+    else if (isSecondary) strikeLabel += ` ◆`;
+
+    let strikeStyle = isPrimary
+      ? `color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,0.8);`
+      : isSecondary
+      ? `color:#58a6ff;text-shadow:0 0 6px rgba(88,166,255,0.7);`
+      : ``;
+
+    html += `<td class="strike ${isCurrent ? 'current-price' : ''}" style="${strikeStyle}">${strikeLabel}</td>`;
+
+    expirations.forEach(exp => {
+      const cell = strikeMap[strike]?.[exp];
+      let display = "";
+      let style = "background:#0d1117;color:#444";
+
+      if (cell) {
+        if (currentTab === "gex") {
+          const val = cell.gex;
+          display = fmt(val);
+          style = colorCell(val, rank);
+        } else if (currentTab === "oi") {
+          const val = (cell.callOI || 0) + (cell.putOI || 0);
+          display = val > 0 ? (val >= 1000 ? (val/1000).toFixed(1)+"K" : val) : "";
+          style = val > 0 ? `background:#1a2a1a;color:#3fb950` : `background:#0d1117;color:#444`;
+        } else {
+          const val = (cell.callVol || 0) + (cell.putVol || 0);
+          display = val > 0 ? (val >= 1000 ? (val/1000).toFixed(1)+"K" : val) : "";
+          style = val > 0 ? `background:#1a1a2a;color:#58a6ff` : `background:#0d1117;color:#444`;
+        }
+      }
+      html += `<td style="${style}">${display}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</table>`;
+  document.getElementById("output").innerHTML = html;
+}
+
+async function analyze() {
+  const ticker = document.getElementById("ticker").value.trim().toUpperCase();
+  if (!ticker) return;
+  document.getElementById("status").textContent = `Loading ${ticker}...`;
+  document.getElementById("output").innerHTML = `<div class="loading">Fetching options chain for ${ticker}... ⏳</div>`;
+  document.getElementById("summary").innerHTML = "";
+  document.getElementById("price-badge").style.display = "none";
+
+  try {
+    const [spot, expirations] = await Promise.all([getQuote(ticker), getExpirations(ticker)]);
+    const exps = expirations.slice(0, 8);
+    document.getElementById("status").textContent = `Got ${exps.length} expirations, loading chains...`;
+
+    const chains = await Promise.all(exps.map(e => getChain(ticker, e)));
+
+    const strikeMap = {};
+    const gexByStrike = {};
+
+    chains.forEach((chain, i) => {
+      const exp = exps[i];
+      chain.forEach(opt => {
+        const strike = opt.strike;
+        if (!strikeMap[strike]) strikeMap[strike] = {};
+        if (!strikeMap[strike][exp]) strikeMap[strike][exp] = { gex:0, callOI:0, putOI:0, callVol:0, putVol:0 };
+        const gex = calcGEX(opt, spot);
+        strikeMap[strike][exp].gex += gex;
+        if (opt.option_type === "call") {
+          strikeMap[strike][exp].callOI += opt.open_interest || 0;
+          strikeMap[strike][exp].callVol += opt.volume || 0;
+        } else {
+          strikeMap[strike][exp].putOI += opt.open_interest || 0;
+          strikeMap[strike][exp].putVol += opt.volume || 0;
+        }
+        gexByStrike[strike] = (gexByStrike[strike] || 0) + gex;
+      });
+    });
+
+    const totalGEX = Object.values(gexByStrike).reduce((a,b) => a+b, 0);
+    const topWall = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1])-Math.abs(a[1]))[0];
+    const posGEX = Object.values(gexByStrike).filter(v => v > 0).reduce((a,b) => a+b, 0);
+    const negGEX = Object.values(gexByStrike).filter(v => v < 0).reduce((a,b) => a+b, 0);
+
+    document.getElementById("price-badge").textContent = `$${spot}`;
+    document.getElementById("price-badge").style.display = "inline";
+    document.getElementById("summary").innerHTML = `
+      <div class="summary-card"><div class="label">Net GEX</div><div class="value" style="color:${totalGEX>0?'#3fb950':'#f85149'}">${totalGEX.toFixed(1)}B</div></div>
+      <div class="summary-card"><div class="label">👑 Primary Wall</div><div class="value" style="color:#f0c040">$${topWall[0]}</div></div>
+      <div class="summary-card"><div class="label">Positive GEX</div><div class="value" style="color:#3fb950">+${posGEX.toFixed(1)}B</div></div>
+      <div class="summary-card"><div class="label">Negative GEX</div><div class="value" style="color:#f85149">${negGEX.toFixed(1)}B</div></div>
+    `;
+
+    lastData = { strikeMap, expirations: exps, spot, gexByStrike };
+    renderTable(lastData);
+    document.getElementById("status").textContent = `✅ ${ticker} — ${Object.keys(strikeMap).length} strikes × ${exps.length} expirations loaded`;
+
+  } catch(err) {
+    document.getElementById("output").innerHTML = `<div class="error">❌ Error: ${err.message}<br><br>Check your token and try again.</div>`;
+    document.getElementById("status").textContent = "Error loading data";
+  }
+}
+</script>
+</body>
+</html>
