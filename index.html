@@ -53,7 +53,41 @@
 </style>
 </head>
 <body>
+<body>
 
+<div id="lock-screen" style="
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:#0d1117;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:9999;">
+  <h1 style="color:#58a6ff;font-size:24px;margin-bottom:8px;">⚡ Turbo Scanner</h1>
+  <p style="color:#8b949e;margin-bottom:24px;">Enter password to continue</p>
+  <input id="pass-input" type="password" placeholder="Password"
+    style="background:#21262d;border:1px solid #30363d;color:#e6edf3;
+    padding:10px 16px;border-radius:6px;font-size:16px;width:220px;
+    margin-bottom:12px;text-align:center;"
+    onkeydown="if(event.key==='Enter')checkPass()"/>
+  <button onclick="checkPass()"
+    style="background:#238636;color:white;border:none;padding:10px 24px;
+    border-radius:6px;font-size:15px;cursor:pointer;width:220px;">
+    Enter
+  </button>
+  <p id="pass-error" style="color:#f85149;margin-top:12px;display:none;">
+    Incorrect password
+  </p>
+</div>
+
+<script>
+function checkPass() {
+  const input = document.getElementById('pass-input').value;
+  if (input === 'flourish!1') {
+    document.getElementById('lock-screen').style.display = 'none';
+  } else {
+    document.getElementById('pass-error').style.display = 'block';
+  }
+}
+</script>
+
+ 
 <div class="header">
   <h1>⚡ GEX Scanner</h1>
   <div class="controls">
