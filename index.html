@@ -13,6 +13,10 @@
   input { background: #21262d; border: 1px solid #30363d; color: #e6edf3; padding: 6px 12px; border-radius: 6px; font-size: 14px; width: 100px; }
   button { background: #238636; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
   button:hover { background: #2ea043; }
+  .mode-toggle { display: flex; gap: 0; background: #21262d; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; }
+  .mode-btn { padding: 6px 20px; cursor: pointer; font-size: 13px; font-family: monospace; border: none; background: transparent; color: #8b949e; transition: all 0.2s; }
+  .mode-btn.active.scalp { background: #f0a500; color: #000; font-weight: bold; }
+  .mode-btn.active.swing { background: #1f6feb; color: #fff; font-weight: bold; }
   .status { padding: 8px 20px; font-size: 12px; color: #8b949e; }
   .price-badge { background: #1f6feb; color: white; padding: 2px 10px; border-radius: 10px; font-size: 12px; }
   .table-wrap { overflow: auto; padding: 0 10px 20px; }
@@ -45,6 +49,9 @@
   .summary-card .value { font-size: 15px; font-weight: bold; margin-top: 2px; }
   .trade-section { margin: 0 20px 20px; }
   .trade-section h2 { color: #58a6ff; font-size: 14px; margin-bottom: 10px; }
+  .mode-banner { padding: 6px 20px; font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+  .mode-banner.scalp { background: rgba(240,165,0,0.15); color: #f0a500; border-left: 3px solid #f0a500; }
+  .mode-banner.swing { background: rgba(31,111,235,0.15); color: #58a6ff; border-left: 3px solid #1f6feb; }
   .quick-rec { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
   .quick-rec-item { display: flex; flex-direction: column; gap: 2px; }
   .quick-rec-item .qlabel { color: #8b949e; font-size: 10px; }
@@ -56,10 +63,11 @@
   .setup-card h3 { font-size: 13px; margin-bottom: 10px; }
   .setup-card.bull h3 { color: #3fb950; }
   .setup-card.bear h3 { color: #f85149; }
-  .setup-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #21262d; font-size: 12px; }
+  .setup-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #21262d; font-size: 12px; gap: 12px; }
   .setup-row:last-child { border-bottom: none; }
-  .setup-row .slabel { color: #8b949e; }
-  .setup-row .sval { font-weight: bold; }
+  .setup-row .slabel { color: #8b949e; white-space: nowrap; }
+  .setup-row .sval { font-weight: bold; text-align: right; }
+  .budget-note { font-size: 11px; color: #8b949e; margin-top: 8px; padding: 6px 10px; background: #21262d; border-radius: 6px; }
 </style>
 </head>
 <body>
@@ -88,8 +96,12 @@
 <div class="header">
   <h1>⚡ Turbo Scanner</h1>
   <div class="controls">
-    <input id="ticker" value="AAPL" placeholder="Ticker" />
+    <input id="ticker" value="IWM" placeholder="Ticker" />
     <button onclick="analyze()">Analyze</button>
+  </div>
+  <div class="mode-toggle">
+    <button class="mode-btn scalp active" onclick="setMode('scalp')">⚡ Scalp</button>
+    <button class="mode-btn swing" onclick="setMode('swing')">📈 Swing</button>
   </div>
   <span id="price-badge" class="price-badge" style="display:none"></span>
 </div>
@@ -117,7 +129,7 @@
 <script>
 function checkPass() {
   const input = document.getElementById('pass-input').value;
-  if (input === 'flourish!1') {
+  if (input === 'easymoney') {
     document.getElementById('lock-screen').style.display = 'none';
   } else {
     document.getElementById('pass-error').style.display = 'block';
@@ -127,7 +139,17 @@ function checkPass() {
 const TRADIER_TOKEN = "PJNRwKQDW5ArKyKnxLerGVddruQA";
 const BASE = "https://api.tradier.com/v1";
 let currentTab = "gex";
+let currentMode = "scalp";
 let lastData = null;
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll(".mode-btn").forEach(b => {
+    b.classList.remove("active");
+    if (b.classList.contains(mode)) b.classList.add("active");
+  });
+  if (lastData) buildAndShowTradeRec(lastData.spot, lastData.gexByStrike, lastData.expirations);
+}
 
 async function getQuote(ticker) {
   const r = await fetch(`${BASE}/markets/quotes?symbols=${ticker}`, {
@@ -191,7 +213,9 @@ function switchTab(tab) {
   if (lastData) renderTable(lastData);
 }
 
-function buildTradeRec(spot, gexByStrike, expirations) {
+function buildAndShowTradeRec(spot, gexByStrike, expirations) {
+  const isScalp = currentMode === "scalp";
+
   const sorted = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
   const primaryStrike = Number(sorted[0]?.[0]);
   const secondaryStrikes = [Number(sorted[1]?.[0]), Number(sorted[2]?.[0])];
@@ -199,31 +223,58 @@ function buildTradeRec(spot, gexByStrike, expirations) {
   const totalGEX = Object.values(gexByStrike).reduce((a,b) => a+b, 0);
   const isBullish = totalGEX > 0;
 
-  // Find nearest resistance above and support below
   const strikesAbove = Object.keys(gexByStrike).map(Number).filter(s => s > spot).sort((a,b) => a-b);
   const strikesBelow = Object.keys(gexByStrike).map(Number).filter(s => s < spot).sort((a,b) => b-a);
 
-  const nearestResistance = strikesAbove[0] || spot + 5;
-  const nearestSupport = strikesBelow[0] || spot - 5;
+  const nearestResistance = strikesAbove[0] || spot + 2;
+  const nearestSupport = strikesBelow[0] || spot - 2;
 
-  // Pick nearest expiry (2nd one for a bit more time)
-  const recExp = expirations[1] || expirations[0];
-  const recExpShort = recExp.replace(/\d{4}-/, "");
+  // Scalp: use 0DTE or nearest expiry, tighter targets
+  // Swing: use 2-4 weeks out, wider targets
+  const scalpExp = expirations[0];
+  const swingExp = expirations.find(e => {
+    const days = (new Date(e) - new Date()) / (1000*60*60*24);
+    return days >= 14;
+  }) || expirations[2] || expirations[1];
 
-  // Call setup
-  const callStrike = strikesAbove.find(s => s > spot) || nearestResistance;
-  const callTarget = secondaryStrikes.find(s => s > callStrike) || callStrike + 5;
-  const callStop = nearestSupport;
+  const recExp = isScalp ? scalpExp : swingExp;
+  const recExpShort = recExp?.replace(/\d{4}-/, "") || "";
 
-  // Put setup
-  const putStrike = strikesBelow.find(s => s < spot) || nearestSupport;
-  const putTarget = secondaryStrikes.find(s => s < putStrike) || putStrike - 5;
-  const putStop = nearestResistance;
+  // Strike selection
+  // Scalp: ATM or 1 strike OTM (cheap, fast move)
+  // Swing: 1-2 strikes OTM with more time
+  const callStrike = isScalp
+    ? (strikesAbove[0] || spot + 1)
+    : (strikesAbove[1] || strikesAbove[0] || spot + 2);
+
+  const putStrike = isScalp
+    ? (strikesBelow[0] || spot - 1)
+    : (strikesBelow[1] || strikesBelow[0] || spot - 2);
+
+  const callTarget1 = nearestResistance;
+  const callTarget2 = secondaryStrikes.find(s => s > callStrike) || callStrike + (isScalp ? 2 : 5);
+  const putTarget1 = nearestSupport;
+  const putTarget2 = secondaryStrikes.find(s => s < putStrike) || putStrike - (isScalp ? 2 : 5);
+
+  // Confirmation timeframes
+  const confirmTF = isScalp ? "1-3 min" : "1hr";
+  const entryTF = isScalp ? "1-3 min candle close" : "15min candle close";
+  const holdTime = isScalp ? "Minutes to 1hr" : "1-3 days";
+  const targetReturn = "+100%";
+
+  // Budget guidance for under $500
+  const budgetNote = isScalp
+    ? "💡 Under $500 budget: Look for options priced $0.50–$2.00. ATM or 1 strike OTM, 0DTE or same-week expiry gives best leverage for +100% moves."
+    : "💡 Under $500 budget: Look for options priced $1.00–$4.00. 1-2 strikes OTM, 2-4 weeks out. Avoid paying too much time premium — target high IV setups.";
 
   const bias = isBullish ? "🟢 BULLISH" : "🔴 BEARISH";
   const biasColor = isBullish ? "#3fb950" : "#f85149";
+  const modeColor = isScalp ? "#f0a500" : "#58a6ff";
+  const modeLabel = isScalp ? "⚡ SCALP MODE — 1-3 Min Confirmation" : "📈 SWING MODE — 1Hr Confirmation / 15Min Entry";
 
-  return `
+  const tradeRec = document.getElementById("trade-rec");
+  tradeRec.innerHTML = `
+    <div class="mode-banner ${currentMode}">${modeLabel}</div>
     <h2>⚡ Trade Recommendations</h2>
     <div class="quick-rec">
       <div class="quick-rec-item">
@@ -239,6 +290,10 @@ function buildTradeRec(spot, gexByStrike, expirations) {
         <span class="qval" style="color:#f0c040">$${primaryStrike}</span>
       </div>
       <div class="quick-rec-item">
+        <span class="qlabel">EXPIRY</span>
+        <span class="qval" style="color:${modeColor}">${recExpShort}</span>
+      </div>
+      <div class="quick-rec-item">
         <span class="qlabel">CALL PLAY</span>
         <span class="qval" style="color:#3fb950">$${callStrike}C ${recExpShort}</span>
       </div>
@@ -250,24 +305,33 @@ function buildTradeRec(spot, gexByStrike, expirations) {
     <div class="setup-cards">
       <div class="setup-card bull">
         <h3>📈 BULL SETUP — $${callStrike} Call ${recExpShort}</h3>
-        <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#3fb950">Price reclaims $${spot} on 15min close</span></div>
+        <div class="setup-row"><span class="slabel">Mode</span><span class="sval" style="color:${modeColor}">${isScalp ? "⚡ Scalp" : "📈 Swing"}</span></div>
+        <div class="setup-row"><span class="slabel">Confirm TF</span><span class="sval">${confirmTF} chart</span></div>
+        <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#3fb950">Price reclaims $${spot} — ${entryTF}</span></div>
         <div class="setup-row"><span class="slabel">Entry</span><span class="sval">Buy $${callStrike} Call exp ${recExpShort}</span></div>
-        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#3fb950">$${nearestResistance}</span></div>
-        <div class="setup-row"><span class="slabel">Target 2</span><span class="sval" style="color:#3fb950">$${callTarget}</span></div>
-        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#f85149">Below $${callStop}</span></div>
-        <div class="setup-row"><span class="slabel">Confirmation</span><span class="sval">15min candle close + volume</span></div>
+        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#3fb950">$${callTarget1} (+50% option)</span></div>
+        <div class="setup-row"><span class="slabel">Target 2 🎯</span><span class="sval" style="color:#3fb950">$${callTarget2} (+100% option)</span></div>
+        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#f85149">Below $${nearestSupport} (-50% option)</span></div>
+        <div class="setup-row"><span class="slabel">Hold Time</span><span class="sval">${holdTime}</span></div>
+        <div class="setup-row"><span class="slabel">Target Return</span><span class="sval" style="color:#f0c040">${targetReturn} 🔥</span></div>
+        <div class="budget-note">${budgetNote}</div>
       </div>
       <div class="setup-card bear">
         <h3>📉 BEAR SETUP — $${putStrike} Put ${recExpShort}</h3>
-        <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#f85149">Price rejected at $${spot} on 15min close</span></div>
+        <div class="setup-row"><span class="slabel">Mode</span><span class="sval" style="color:${modeColor}">${isScalp ? "⚡ Scalp" : "📈 Swing"}</span></div>
+        <div class="setup-row"><span class="slabel">Confirm TF</span><span class="sval">${confirmTF} chart</span></div>
+        <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#f85149">Price rejected at $${spot} — ${entryTF}</span></div>
         <div class="setup-row"><span class="slabel">Entry</span><span class="sval">Buy $${putStrike} Put exp ${recExpShort}</span></div>
-        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#f85149">$${nearestSupport}</span></div>
-        <div class="setup-row"><span class="slabel">Target 2</span><span class="sval" style="color:#f85149">$${putTarget}</span></div>
-        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#3fb950">Above $${putStop}</span></div>
-        <div class="setup-row"><span class="slabel">Confirmation</span><span class="sval">15min candle close + volume</span></div>
+        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#f85149">$${putTarget1} (+50% option)</span></div>
+        <div class="setup-row"><span class="slabel">Target 2 🎯</span><span class="sval" style="color:#f85149">$${putTarget2} (+100% option)</span></div>
+        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#3fb950">Above $${nearestResistance} (-50% option)</span></div>
+        <div class="setup-row"><span class="slabel">Hold Time</span><span class="sval">${holdTime}</span></div>
+        <div class="setup-row"><span class="slabel">Target Return</span><span class="sval" style="color:#f0c040">${targetReturn} 🔥</span></div>
+        <div class="budget-note">${budgetNote}</div>
       </div>
     </div>
   `;
+  tradeRec.style.display = "block";
 }
 
 function renderTable(data) {
@@ -281,12 +345,10 @@ function renderTable(data) {
   const closestStrike = allStrikes.reduce((a,b) => Math.abs(a-spot) < Math.abs(b-spot) ? a : b);
   const closestIdx = allStrikes.indexOf(closestStrike);
 
-  // 🔮 Price magnet — strike with highest positive GEX nearest to price
   const magnetStrike = Object.entries(gexByStrike)
     .filter(([s,v]) => v > 0)
     .sort((a,b) => Math.abs(Number(a[0])-spot) - Math.abs(Number(b[0])-spot))[0]?.[0];
 
-  // Filter to 10 above and 10 below
   const visibleStrikes = allStrikes.filter((s, i) => i >= closestIdx - 10 && i <= closestIdx + 10);
 
   let html = `<table><tr><th class="strike-col">STRIKE</th>`;
@@ -313,13 +375,7 @@ function renderTable(data) {
     else if (isSecondary) strikeLabel += ` ◆`;
     if (isMagnet) strikeLabel += ` 🔮`;
 
-    let strikeStyle = isPrimary
-      ? `color:#f0c040;`
-      : isSecondary
-      ? `color:#58a6ff;`
-      : isCurrent
-      ? ``
-      : ``;
+    const strikeStyle = isPrimary ? `color:#f0c040;` : isSecondary ? `color:#58a6ff;` : ``;
 
     html += `<td class="strike ${isCurrent ? 'current-price' : ''}" style="${strikeStyle}">${strikeLabel}</td>`;
 
@@ -405,10 +461,7 @@ async function analyze() {
 
     lastData = { strikeMap, expirations: exps, spot, gexByStrike };
     renderTable(lastData);
-
-    const tradeRec = document.getElementById("trade-rec");
-    tradeRec.innerHTML = buildTradeRec(spot, gexByStrike, exps);
-    tradeRec.style.display = "block";
+    buildAndShowTradeRec(spot, gexByStrike, exps);
 
     document.getElementById("status").textContent = `✅ ${ticker} — showing 10 strikes above & below $${spot}`;
 
