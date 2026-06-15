@@ -40,7 +40,7 @@
   .legend-secondary { width: 14px; height: 14px; border: 2px solid #58a6ff; border-radius: 3px; }
   .loading { text-align: center; padding: 60px; color: #8b949e; font-size: 16px; }
   .error { color: #f85149; padding: 20px; }
-  .tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
+  .tabs { display: flex; gap: 4px; padding: 10px 20px 0; flex-wrap: wrap; }
   .tab { padding: 6px 14px; border-radius: 6px 6px 0 0; cursor: pointer; color: #8b949e; border: 1px solid #30363d; border-bottom: none; background: #161b22; }
   .tab.active { color: #e6edf3; background: #21262d; border-color: #58a6ff; }
   .summary { display: flex; gap: 16px; padding: 8px 20px; flex-wrap: wrap; }
@@ -68,6 +68,52 @@
   .setup-row .slabel { color: #8b949e; white-space: nowrap; }
   .setup-row .sval { font-weight: bold; text-align: right; }
   .budget-note { font-size: 11px; color: #8b949e; margin-top: 8px; padding: 6px 10px; background: #21262d; border-radius: 6px; }
+
+  /* GAMMA WALLS */
+  .walls-section { padding: 16px 20px 20px; }
+  .walls-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  .walls-header h2 { color: #e6edf3; font-size: 15px; }
+  .walls-meta { display: flex; gap: 12px; font-size: 11px; color: #8b949e; }
+  .walls-meta span { display: flex; align-items: center; gap: 4px; }
+  .walls-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .wall-card { background: #161b22; border-radius: 10px; padding: 14px; flex: 1; min-width: 150px; max-width: 220px; position: relative; border: 1px solid #30363d; }
+  .wall-card.sup { border-top: 3px solid #3fb950; }
+  .wall-card.res { border-top: 3px solid #f85149; }
+  .wall-card.primary-wall { box-shadow: 0 0 12px rgba(240,192,64,0.4); border-color: #f0c040; }
+  .wall-rank { position: absolute; top: -1px; left: 14px; background: #f0c040; color: #000; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 0 0 6px 6px; }
+  .wall-rank.rank-1 { background: #f0c040; color: #000; }
+  .wall-rank.rank-2 { background: #58a6ff; color: #000; }
+  .wall-rank.rank-3 { background: #8b949e; color: #000; }
+  .wall-rank.rank-4 { background: #30363d; color: #e6edf3; }
+  .wall-rank.rank-5 { background: #30363d; color: #e6edf3; }
+  .wall-badge { display: inline-block; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; margin-top: 10px; }
+  .wall-badge.sup { background: rgba(63,185,80,0.2); color: #3fb950; }
+  .wall-badge.res { background: rgba(248,81,73,0.2); color: #f85149; }
+  .wall-price { font-size: 26px; font-weight: bold; margin-bottom: 2px; }
+  .wall-price.sup { color: #3fb950; }
+  .wall-price.res { color: #f85149; }
+  .wall-dist { font-size: 11px; color: #8b949e; margin-bottom: 10px; }
+  .wall-strength-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 3px; }
+  .wall-strength-bar { height: 4px; background: #21262d; border-radius: 2px; margin-bottom: 10px; overflow: hidden; }
+  .wall-strength-fill { height: 100%; border-radius: 2px; }
+  .wall-strength-fill.extreme { background: #f85149; width: 100%; }
+  .wall-strength-fill.strong { background: #f0a500; width: 75%; }
+  .wall-strength-fill.mod { background: #58a6ff; width: 50%; }
+  .wall-strength-fill.weak { background: #8b949e; width: 25%; }
+  .wall-strength-text { font-size: 11px; font-weight: bold; margin-bottom: 10px; }
+  .wall-strength-text.extreme { color: #f85149; }
+  .wall-strength-text.strong { color: #f0a500; }
+  .wall-strength-text.mod { color: #58a6ff; }
+  .wall-strength-text.weak { color: #8b949e; }
+  .wall-stats { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #21262d; padding-top: 8px; }
+  .wall-stat-row { display: flex; justify-content: space-between; font-size: 11px; }
+  .wall-stat-row .wlabel { color: #8b949e; }
+  .wall-stat-row .wval { font-weight: bold; }
+  .wall-stat-row .wval.pos { color: #3fb950; }
+  .wall-stat-row .wval.neg { color: #f85149; }
+  .wall-stat-row .wval.neu { color: #e6edf3; }
+  .walls-legend { display: flex; gap: 16px; margin-top: 12px; font-size: 11px; color: #8b949e; flex-wrap: wrap; }
+  .walls-legend span { display: flex; align-items: center; gap: 4px; }
 </style>
 </head>
 <body>
@@ -110,11 +156,12 @@
   <div class="tab active" onclick="switchTab('gex')">GEX</div>
   <div class="tab" onclick="switchTab('oi')">OI</div>
   <div class="tab" onclick="switchTab('volume')">Volume</div>
+  <div class="tab" onclick="switchTab('walls')">🧱 Walls</div>
 </div>
 
 <div class="summary" id="summary"></div>
 
-<div class="legend">
+<div class="legend" id="legend">
   <div class="legend-item"><div class="legend-box" style="background:#1a4731"></div> Positive GEX</div>
   <div class="legend-item"><div class="legend-box" style="background:#4a1515"></div> Negative GEX</div>
   <div class="legend-item"><div class="legend-primary"></div> Primary Wall 👑</div>
@@ -182,6 +229,24 @@ function calcGEX(option, spot) {
   return gamma * oi * 100 * spot * spot * mult / 1e9;
 }
 
+function getStrength(absGex) {
+  if (absGex >= 3) return { label: "EXTREME", cls: "extreme" };
+  if (absGex >= 1) return { label: "STRONG", cls: "strong" };
+  if (absGex >= 0.3) return { label: "MOD", cls: "mod" };
+  return { label: "WEAK", cls: "weak" };
+}
+
+function fmtB(val) {
+  const abs = Math.abs(val);
+  if (abs >= 1) return (val > 0 ? "+" : "") + val.toFixed(1) + "B";
+  return (val > 0 ? "+" : "") + (val * 1000).toFixed(0) + "M";
+}
+
+function fmtK(val) {
+  if (val >= 1000) return (val/1000).toFixed(1) + "K";
+  return val.toFixed(0);
+}
+
 function colorCell(val, rank) {
   if (val === 0) return `background:#0d1117;color:#444`;
   const intensity = Math.min(Math.abs(val) / 5, 1);
@@ -208,65 +273,164 @@ function fmt(val) {
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll(".tab").forEach((t,i) => {
-    t.classList.toggle("active", ["gex","oi","volume"][i] === tab);
+    t.classList.toggle("active", ["gex","oi","volume","walls"][i] === tab);
   });
-  if (lastData) renderTable(lastData);
+
+  const legend = document.getElementById("legend");
+  const tradeRec = document.getElementById("trade-rec");
+
+  if (tab === "walls") {
+    legend.style.display = "none";
+    tradeRec.style.display = "none";
+    document.getElementById("output").style.display = "none";
+    if (lastData) renderWalls(lastData);
+  } else {
+    legend.style.display = "flex";
+    document.getElementById("output").style.display = "block";
+    document.getElementById("walls-view") && (document.getElementById("walls-view").style.display = "none");
+    if (lastData) {
+      renderTable(lastData);
+      buildAndShowTradeRec(lastData.spot, lastData.gexByStrike, lastData.expirations);
+    }
+  }
+}
+
+function renderWalls(data) {
+  const { spot, gexByStrike, strikeMap, expirations } = data;
+
+  // Remove old walls view
+  const old = document.getElementById("walls-view");
+  if (old) old.remove();
+
+  // Sort by absolute GEX — top 5
+  const top5 = Object.entries(gexByStrike)
+    .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]))
+    .slice(0, 5);
+
+  const resCount = top5.filter(([s]) => Number(s) > spot).length;
+  const supCount = top5.filter(([s]) => Number(s) <= spot).length;
+
+  let html = `
+    <div id="walls-view" class="walls-section">
+      <div class="walls-header">
+        <div>
+          <h2>🧱 Gamma Walls — Key Levels</h2>
+          <div class="walls-meta">
+            <span>🔴 ${resCount} resistance</span>
+            <span>🟢 ${supCount} support</span>
+            <span style="color:#58a6ff">SPOT $${spot}</span>
+          </div>
+        </div>
+      </div>
+      <div class="walls-grid">
+  `;
+
+  top5.forEach(([strike, gex], i) => {
+    const s = Number(strike);
+    const isRes = s > spot;
+    const isSup = s <= spot;
+    const type = isRes ? "res" : "sup";
+    const typeLabel = isRes ? "↗ RES" : "↘ SUP";
+    const distPct = (((s - spot) / spot) * 100).toFixed(2);
+    const distLabel = distPct > 0 ? `+${distPct}% from spot` : `${distPct}% from spot`;
+    const strength = getStrength(Math.abs(gex));
+    const isPrimary = i === 0;
+    const rankCls = `rank-${i+1}`;
+
+    // Get call/put OI and volume across all expirations
+    let callOI = 0, putOI = 0, callVol = 0, putVol = 0;
+    if (strikeMap[s]) {
+      Object.values(strikeMap[s]).forEach(cell => {
+        callOI += cell.callOI || 0;
+        putOI += cell.putOI || 0;
+        callVol += cell.callVol || 0;
+        putVol += cell.putVol || 0;
+      });
+    }
+    const totalOI = callOI + putOI;
+    const totalVol = callVol + putVol;
+
+    html += `
+      <div class="wall-card ${type} ${isPrimary ? 'primary-wall' : ''}">
+        <div class="wall-rank ${rankCls}">#${i+1}${isPrimary ? ' 👑' : ''}</div>
+        <div class="wall-badge ${type}">${typeLabel}</div>
+        <div class="wall-price ${type}">$${s}</div>
+        <div class="wall-dist">${distLabel}</div>
+        <div class="wall-strength-label">STRENGTH</div>
+        <div class="wall-strength-bar">
+          <div class="wall-strength-fill ${strength.cls}"></div>
+        </div>
+        <div class="wall-strength-text ${strength.cls}">${strength.label}</div>
+        <div class="wall-stats">
+          <div class="wall-stat-row">
+            <span class="wlabel">NET GEX</span>
+            <span class="wval ${gex > 0 ? 'pos' : 'neg'}">${fmtB(gex)}</span>
+          </div>
+          <div class="wall-stat-row">
+            <span class="wlabel">● CALL OI</span>
+            <span class="wval pos">${fmtK(callOI)}</span>
+          </div>
+          <div class="wall-stat-row">
+            <span class="wlabel">● PUT OI</span>
+            <span class="wval neg">${fmtK(putOI)}</span>
+          </div>
+          <div class="wall-stat-row">
+            <span class="wlabel">TOTAL OI</span>
+            <span class="wval neu">${fmtK(totalOI)}</span>
+          </div>
+          <div class="wall-stat-row">
+            <span class="wlabel">VOLUME</span>
+            <span class="wval neu">${fmtK(totalVol)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+      <div class="walls-legend">
+        <span>🔴 Resistance — above price</span>
+        <span>🟢 Support — below price</span>
+        <span>👑 Primary — strongest wall</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("output").insertAdjacentHTML("afterend", html);
+  document.getElementById("output").style.display = "none";
 }
 
 function buildAndShowTradeRec(spot, gexByStrike, expirations) {
   const isScalp = currentMode === "scalp";
-
   const sorted = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
   const primaryStrike = Number(sorted[0]?.[0]);
   const secondaryStrikes = [Number(sorted[1]?.[0]), Number(sorted[2]?.[0])];
-
   const totalGEX = Object.values(gexByStrike).reduce((a,b) => a+b, 0);
   const isBullish = totalGEX > 0;
-
   const strikesAbove = Object.keys(gexByStrike).map(Number).filter(s => s > spot).sort((a,b) => a-b);
   const strikesBelow = Object.keys(gexByStrike).map(Number).filter(s => s < spot).sort((a,b) => b-a);
-
   const nearestResistance = strikesAbove[0] || spot + 2;
   const nearestSupport = strikesBelow[0] || spot - 2;
-
-  // Scalp: use 0DTE or nearest expiry, tighter targets
-  // Swing: use 2-4 weeks out, wider targets
   const scalpExp = expirations[0];
   const swingExp = expirations.find(e => {
     const days = (new Date(e) - new Date()) / (1000*60*60*24);
     return days >= 14;
   }) || expirations[2] || expirations[1];
-
   const recExp = isScalp ? scalpExp : swingExp;
   const recExpShort = recExp?.replace(/\d{4}-/, "") || "";
-
-  // Strike selection
-  // Scalp: ATM or 1 strike OTM (cheap, fast move)
-  // Swing: 1-2 strikes OTM with more time
-  const callStrike = isScalp
-    ? (strikesAbove[0] || spot + 1)
-    : (strikesAbove[1] || strikesAbove[0] || spot + 2);
-
-  const putStrike = isScalp
-    ? (strikesBelow[0] || spot - 1)
-    : (strikesBelow[1] || strikesBelow[0] || spot - 2);
-
+  const callStrike = isScalp ? (strikesAbove[0] || spot + 1) : (strikesAbove[1] || strikesAbove[0] || spot + 2);
+  const putStrike = isScalp ? (strikesBelow[0] || spot - 1) : (strikesBelow[1] || strikesBelow[0] || spot - 2);
   const callTarget1 = nearestResistance;
   const callTarget2 = secondaryStrikes.find(s => s > callStrike) || callStrike + (isScalp ? 2 : 5);
   const putTarget1 = nearestSupport;
   const putTarget2 = secondaryStrikes.find(s => s < putStrike) || putStrike - (isScalp ? 2 : 5);
-
-  // Confirmation timeframes
   const confirmTF = isScalp ? "1-3 min" : "1hr";
   const entryTF = isScalp ? "1-3 min candle close" : "15min candle close";
   const holdTime = isScalp ? "Minutes to 1hr" : "1-3 days";
-  const targetReturn = "+100%";
-
-  // Budget guidance for under $500
   const budgetNote = isScalp
-    ? "💡 Under $500 budget: Look for options priced $0.50–$2.00. ATM or 1 strike OTM, 0DTE or same-week expiry gives best leverage for +100% moves."
-    : "💡 Under $500 budget: Look for options priced $1.00–$4.00. 1-2 strikes OTM, 2-4 weeks out. Avoid paying too much time premium — target high IV setups.";
-
+    ? "💡 Under $500: Look for options $0.50–$2.00. ATM or 1 strike OTM, 0DTE or same-week."
+    : "💡 Under $500: Look for options $1.00–$4.00. 1-2 strikes OTM, 2-4 weeks out.";
   const bias = isBullish ? "🟢 BULLISH" : "🔴 BEARISH";
   const biasColor = isBullish ? "#3fb950" : "#f85149";
   const modeColor = isScalp ? "#f0a500" : "#58a6ff";
@@ -277,30 +441,12 @@ function buildAndShowTradeRec(spot, gexByStrike, expirations) {
     <div class="mode-banner ${currentMode}">${modeLabel}</div>
     <h2>⚡ Trade Recommendations</h2>
     <div class="quick-rec">
-      <div class="quick-rec-item">
-        <span class="qlabel">GEX BIAS</span>
-        <span class="qval" style="color:${biasColor}">${bias}</span>
-      </div>
-      <div class="quick-rec-item">
-        <span class="qlabel">PRICE</span>
-        <span class="qval" style="color:#58a6ff">$${spot}</span>
-      </div>
-      <div class="quick-rec-item">
-        <span class="qlabel">🔮 MAGNET</span>
-        <span class="qval" style="color:#f0c040">$${primaryStrike}</span>
-      </div>
-      <div class="quick-rec-item">
-        <span class="qlabel">EXPIRY</span>
-        <span class="qval" style="color:${modeColor}">${recExpShort}</span>
-      </div>
-      <div class="quick-rec-item">
-        <span class="qlabel">CALL PLAY</span>
-        <span class="qval" style="color:#3fb950">$${callStrike}C ${recExpShort}</span>
-      </div>
-      <div class="quick-rec-item">
-        <span class="qlabel">PUT PLAY</span>
-        <span class="qval" style="color:#f85149">$${putStrike}P ${recExpShort}</span>
-      </div>
+      <div class="quick-rec-item"><span class="qlabel">GEX BIAS</span><span class="qval" style="color:${biasColor}">${bias}</span></div>
+      <div class="quick-rec-item"><span class="qlabel">PRICE</span><span class="qval" style="color:#58a6ff">$${spot}</span></div>
+      <div class="quick-rec-item"><span class="qlabel">🔮 MAGNET</span><span class="qval" style="color:#f0c040">$${primaryStrike}</span></div>
+      <div class="quick-rec-item"><span class="qlabel">EXPIRY</span><span class="qval" style="color:${modeColor}">${recExpShort}</span></div>
+      <div class="quick-rec-item"><span class="qlabel">CALL PLAY</span><span class="qval" style="color:#3fb950">$${callStrike}C ${recExpShort}</span></div>
+      <div class="quick-rec-item"><span class="qlabel">PUT PLAY</span><span class="qval" style="color:#f85149">$${putStrike}P ${recExpShort}</span></div>
     </div>
     <div class="setup-cards">
       <div class="setup-card bull">
@@ -309,11 +455,10 @@ function buildAndShowTradeRec(spot, gexByStrike, expirations) {
         <div class="setup-row"><span class="slabel">Confirm TF</span><span class="sval">${confirmTF} chart</span></div>
         <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#3fb950">Price reclaims $${spot} — ${entryTF}</span></div>
         <div class="setup-row"><span class="slabel">Entry</span><span class="sval">Buy $${callStrike} Call exp ${recExpShort}</span></div>
-        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#3fb950">$${callTarget1} (+50% option)</span></div>
-        <div class="setup-row"><span class="slabel">Target 2 🎯</span><span class="sval" style="color:#3fb950">$${callTarget2} (+100% option)</span></div>
-        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#f85149">Below $${nearestSupport} (-50% option)</span></div>
+        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#3fb950">$${callTarget1} (+50%)</span></div>
+        <div class="setup-row"><span class="slabel">Target 2 🎯</span><span class="sval" style="color:#3fb950">$${callTarget2} (+100%)</span></div>
+        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#f85149">Below $${nearestSupport} (-50%)</span></div>
         <div class="setup-row"><span class="slabel">Hold Time</span><span class="sval">${holdTime}</span></div>
-        <div class="setup-row"><span class="slabel">Target Return</span><span class="sval" style="color:#f0c040">${targetReturn} 🔥</span></div>
         <div class="budget-note">${budgetNote}</div>
       </div>
       <div class="setup-card bear">
@@ -322,11 +467,10 @@ function buildAndShowTradeRec(spot, gexByStrike, expirations) {
         <div class="setup-row"><span class="slabel">Confirm TF</span><span class="sval">${confirmTF} chart</span></div>
         <div class="setup-row"><span class="slabel">Trigger</span><span class="sval" style="color:#f85149">Price rejected at $${spot} — ${entryTF}</span></div>
         <div class="setup-row"><span class="slabel">Entry</span><span class="sval">Buy $${putStrike} Put exp ${recExpShort}</span></div>
-        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#f85149">$${putTarget1} (+50% option)</span></div>
-        <div class="setup-row"><span class="slabel">Target 2 🎯</span><span class="sval" style="color:#f85149">$${putTarget2} (+100% option)</span></div>
-        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#3fb950">Above $${nearestResistance} (-50% option)</span></div>
+        <div class="setup-row"><span class="slabel">Target 1</span><span class="sval" style="color:#f85149">$${putTarget1} (+50%)</span></div>
+        <div class="setup-row"><span class="slabel">Target 2 🎯</span><span class="sval" style="color:#f85149">$${putTarget2} (+100%)</span></div>
+        <div class="setup-row"><span class="slabel">Stop Loss</span><span class="sval" style="color:#3fb950">Above $${nearestResistance} (-50%)</span></div>
         <div class="setup-row"><span class="slabel">Hold Time</span><span class="sval">${holdTime}</span></div>
-        <div class="setup-row"><span class="slabel">Target Return</span><span class="sval" style="color:#f0c040">${targetReturn} 🔥</span></div>
         <div class="budget-note">${budgetNote}</div>
       </div>
     </div>
@@ -337,18 +481,14 @@ function buildAndShowTradeRec(spot, gexByStrike, expirations) {
 function renderTable(data) {
   const { strikeMap, expirations, spot, gexByStrike } = data;
   const allStrikes = Object.keys(strikeMap).map(Number).sort((a,b) => b - a);
-
   const sorted = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
   const primaryStrike = Number(sorted[0]?.[0]);
   const secondaryStrikes = new Set([Number(sorted[1]?.[0]), Number(sorted[2]?.[0])]);
-
   const closestStrike = allStrikes.reduce((a,b) => Math.abs(a-spot) < Math.abs(b-spot) ? a : b);
   const closestIdx = allStrikes.indexOf(closestStrike);
-
   const magnetStrike = Object.entries(gexByStrike)
     .filter(([s,v]) => v > 0)
     .sort((a,b) => Math.abs(Number(a[0])-spot) - Math.abs(Number(b[0])-spot))[0]?.[0];
-
   const visibleStrikes = allStrikes.filter((s, i) => i >= closestIdx - 10 && i <= closestIdx + 10);
 
   let html = `<table><tr><th class="strike-col">STRIKE</th>`;
@@ -361,29 +501,22 @@ function renderTable(data) {
     const isCurrent = strike === closestStrike;
     const isMagnet = String(strike) === String(magnetStrike) && !isCurrent;
     const rank = isPrimary ? 'primary' : isSecondary ? 'secondary' : null;
-
     let rowClass = "";
     if (isCurrent) rowClass += " current-row";
     if (isPrimary) rowClass += " primary-row";
     else if (isSecondary) rowClass += " secondary-row";
-
     html += `<tr class="${rowClass.trim()}">`;
-
     let strikeLabel = `$${strike}`;
     if (isCurrent) strikeLabel += ` 📍`;
     else if (isPrimary) strikeLabel += ` 👑`;
     else if (isSecondary) strikeLabel += ` ◆`;
     if (isMagnet) strikeLabel += ` 🔮`;
-
     const strikeStyle = isPrimary ? `color:#f0c040;` : isSecondary ? `color:#58a6ff;` : ``;
-
     html += `<td class="strike ${isCurrent ? 'current-price' : ''}" style="${strikeStyle}">${strikeLabel}</td>`;
-
     expirations.forEach(exp => {
       const cell = strikeMap[strike]?.[exp];
       let display = "";
       let style = "background:#0d1117;color:#444";
-
       if (cell) {
         if (currentTab === "gex") {
           const val = cell.gex;
@@ -413,16 +546,17 @@ async function analyze() {
   if (!ticker) return;
   document.getElementById("status").textContent = `Loading ${ticker}...`;
   document.getElementById("output").innerHTML = `<div class="loading">Fetching options chain for ${ticker}... ⏳</div>`;
+  document.getElementById("output").style.display = "block";
   document.getElementById("summary").innerHTML = "";
   document.getElementById("trade-rec").style.display = "none";
   document.getElementById("price-badge").style.display = "none";
+  const old = document.getElementById("walls-view");
+  if (old) old.remove();
 
   try {
     const [spot, expirations] = await Promise.all([getQuote(ticker), getExpirations(ticker)]);
     const exps = expirations.slice(0, 8);
-
     const chains = await Promise.all(exps.map(e => getChain(ticker, e)));
-
     const strikeMap = {};
     const gexByStrike = {};
 
@@ -460,8 +594,13 @@ async function analyze() {
     `;
 
     lastData = { strikeMap, expirations: exps, spot, gexByStrike };
-    renderTable(lastData);
-    buildAndShowTradeRec(spot, gexByStrike, exps);
+
+    if (currentTab === "walls") {
+      renderWalls(lastData);
+    } else {
+      renderTable(lastData);
+      buildAndShowTradeRec(spot, gexByStrike, exps);
+    }
 
     document.getElementById("status").textContent = `✅ ${ticker} — showing 10 strikes above & below $${spot}`;
 
@@ -473,3 +612,4 @@ async function analyze() {
 </script>
 </body>
 </html>
+
