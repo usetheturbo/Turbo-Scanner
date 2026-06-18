@@ -14,7 +14,7 @@
   button { background: #238636; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
   button:hover { background: #2ea043; }
   .mode-toggle { display: flex; gap: 0; background: #21262d; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; }
-  .mode-btn { padding: 6px 20px; cursor: pointer; font-size: 13px; font-family: monospace; border: none; background: transparent; color: #8b949e; transition: all 0.2s; }
+  .mode-btn { padding: 6px 20px; cursor: pointer; font-size: 13px; font-family: monospace; border: none; background: transparent; color: #8b949e; }
   .mode-btn.active.scalp { background: #f0a500; color: #000; font-weight: bold; }
   .mode-btn.active.swing { background: #1f6feb; color: #fff; font-weight: bold; }
   .status { padding: 8px 20px; font-size: 12px; color: #8b949e; }
@@ -69,7 +69,6 @@
   .setup-row .sval { font-weight: bold; text-align: right; }
   .budget-note { font-size: 11px; color: #8b949e; margin-top: 8px; padding: 6px 10px; background: #21262d; border-radius: 6px; }
 
-  /* GAMMA WALLS */
   .walls-section { padding: 16px 20px 20px; }
   .walls-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
   .walls-header h2 { color: #e6edf3; font-size: 15px; }
@@ -114,6 +113,37 @@
   .wall-stat-row .wval.neu { color: #e6edf3; }
   .walls-legend { display: flex; gap: 16px; margin-top: 12px; font-size: 11px; color: #8b949e; flex-wrap: wrap; }
   .walls-legend span { display: flex; align-items: center; gap: 4px; }
+
+  .top-tabs { display: flex; gap: 0; padding: 0 20px; background: #0d1117; border-bottom: 1px solid #30363d; }
+  .top-tab { padding: 10px 18px; cursor: pointer; color: #8b949e; font-size: 13px; border-bottom: 3px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: monospace; }
+  .top-tab.active { color: #f0a500; border-bottom-color: #f0a500; font-weight: bold; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .ob-section { margin: 18px 20px; }
+  .ob-section-title { color: #58a6ff; font-size: 13px; margin-bottom: 10px; display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
+  .ob-section-title .tag { background:#21262d; color:#8b949e; font-size:10px; padding:2px 8px; border-radius:10px; }
+  .ticker-box { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:14px; }
+  .ticker-row { display:flex; gap:8px; margin-bottom:14px; flex-wrap: wrap; }
+  .best-pick { display:flex; gap:12px; flex-wrap:wrap; }
+  .pick-card { flex:1; min-width:230px; background:#0d1117; border-radius:8px; padding:14px; border:1px solid #238636; }
+  .pick-card.put { border-color:#da3633; }
+  .pick-card h3 { font-size:14px; margin-bottom:10px; }
+  .pick-card.call h3 { color:#3fb950; }
+  .pick-card.put h3 { color:#f85149; }
+  .pick-row { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; border-bottom:1px solid #21262d; gap: 10px; }
+  .pick-row:last-child{border-bottom:none;}
+  .pick-row .l{color:#8b949e; white-space: nowrap;}
+  .pick-row .v{font-weight:bold; text-align: right;}
+  .pick-row .v.highlight { color: #f0c040; font-size: 13px; }
+  .pick-row .v.discount { color: #f85149; }
+  .no-pick { font-size: 12px; color: #8b949e; padding: 12px; text-align: center; }
+  .method-note { font-size: 10px; color: #8b949e; margin-top: 10px; padding: 8px 10px; background: #21262d; border-radius: 6px; line-height: 1.6; }
+  .alt-list { margin-top: 12px; font-size: 11px; }
+  .alt-list-title { color: #8b949e; margin-bottom: 6px; font-weight: bold; }
+  .alt-row { display: flex; justify-content: space-between; padding: 4px 8px; background: #0d1117; border-radius: 4px; margin-bottom: 4px; }
+  .alt-row span { color: #8b949e; }
+  .alt-row span.strike { color: #e6edf3; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -139,44 +169,66 @@
   </p>
 </div>
 
-<div class="header">
-  <h1>⚡ Turbo Scanner</h1>
-  <div class="controls">
-    <input id="ticker" value="IWM" placeholder="Ticker" />
-    <button onclick="analyze()">Analyze</button>
+<div class="header"><h1>⚡ Turbo Scanner</h1></div>
+
+<div class="top-tabs">
+  <button class="top-tab active" onclick="switchView('opening-bell')">⚡ Opening Bell</button>
+  <button class="top-tab" onclick="switchView('full-scanner')">📊 Full Scanner</button>
+</div>
+
+<div id="view-opening-bell" class="view active">
+  <div class="ob-section">
+    <div class="ob-section-title">🎯 Box + Discount + Volume Finder <span class="tag">0DTE · -70%+ off close · inside the box</span></div>
+    <div class="ticker-box">
+      <div class="ticker-row">
+        <input id="ob-ticker" value="IWM" placeholder="Ticker" />
+        <button onclick="runDeepDive()">Find Best Contract</button>
+      </div>
+      <div id="ob-status" class="status" style="padding:0 0 10px;">Enter a ticker and tap Find Best Contract</div>
+      <div id="ob-results"></div>
+    </div>
   </div>
-  <div class="mode-toggle">
-    <button class="mode-btn scalp active" onclick="setMode('scalp')">⚡ Scalp</button>
-    <button class="mode-btn swing" onclick="setMode('swing')">📈 Swing</button>
+</div>
+
+<div id="view-full-scanner" class="view">
+  <div class="header" style="border-top:1px solid #30363d;">
+    <div class="controls">
+      <input id="ticker" value="IWM" placeholder="Ticker" />
+      <button onclick="analyze()">Analyze</button>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn scalp active" onclick="setMode('scalp')">⚡ Scalp</button>
+      <button class="mode-btn swing" onclick="setMode('swing')">📈 Swing</button>
+    </div>
+    <span id="price-badge" class="price-badge" style="display:none"></span>
   </div>
-  <span id="price-badge" class="price-badge" style="display:none"></span>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('gex')">GEX</div>
+    <div class="tab" onclick="switchTab('oi')">OI</div>
+    <div class="tab" onclick="switchTab('volume')">Volume</div>
+    <div class="tab" onclick="switchTab('walls')">🧱 Walls</div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="legend" id="legend">
+    <div class="legend-item"><div class="legend-box" style="background:#1a4731"></div> Positive GEX</div>
+    <div class="legend-item"><div class="legend-box" style="background:#4a1515"></div> Negative GEX</div>
+    <div class="legend-item"><div class="legend-primary"></div> Primary Wall 👑</div>
+    <div class="legend-item"><div class="legend-secondary"></div> Secondary Wall ◆</div>
+    <div class="legend-item">🔮 Price Magnet</div>
+  </div>
+
+  <div class="status" id="status">Enter a ticker and tap Analyze</div>
+  <div id="trade-rec" style="display:none" class="trade-section"></div>
+  <div class="table-wrap" id="output"><div class="loading">Ready — enter a ticker above 🎯</div></div>
 </div>
-
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('gex')">GEX</div>
-  <div class="tab" onclick="switchTab('oi')">OI</div>
-  <div class="tab" onclick="switchTab('volume')">Volume</div>
-  <div class="tab" onclick="switchTab('walls')">🧱 Walls</div>
-</div>
-
-<div class="summary" id="summary"></div>
-
-<div class="legend" id="legend">
-  <div class="legend-item"><div class="legend-box" style="background:#1a4731"></div> Positive GEX</div>
-  <div class="legend-item"><div class="legend-box" style="background:#4a1515"></div> Negative GEX</div>
-  <div class="legend-item"><div class="legend-primary"></div> Primary Wall 👑</div>
-  <div class="legend-item"><div class="legend-secondary"></div> Secondary Wall ◆</div>
-  <div class="legend-item">🔮 Price Magnet</div>
-</div>
-
-<div class="status" id="status">Enter a ticker and tap Analyze</div>
-<div id="trade-rec" style="display:none" class="trade-section"></div>
-<div class="table-wrap" id="output"><div class="loading">Ready — enter a ticker above 🎯</div></div>
 
 <script>
 function checkPass() {
   const input = document.getElementById('pass-input').value;
-  if (input === 'easymoney') {
+  if (input === '777') {
     document.getElementById('lock-screen').style.display = 'none';
   } else {
     document.getElementById('pass-error').style.display = 'block';
@@ -189,6 +241,201 @@ let currentTab = "gex";
 let currentMode = "scalp";
 let lastData = null;
 
+function switchView(view) {
+  document.querySelectorAll(".top-tab").forEach((t,i) => {
+    t.classList.toggle("active", (view === 'opening-bell' && i === 0) || (view === 'full-scanner' && i === 1));
+  });
+  document.getElementById("view-opening-bell").classList.toggle("active", view === 'opening-bell');
+  document.getElementById("view-full-scanner").classList.toggle("active", view === 'full-scanner');
+}
+
+async function getQuoteRaw(ticker) {
+  const r = await fetch(`${BASE}/markets/quotes?symbols=${ticker}`, {
+    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
+  });
+  const d = await r.json();
+  return d.quotes.quote.last;
+}
+
+async function getExpirationsRaw(ticker) {
+  const r = await fetch(`${BASE}/markets/options/expirations?symbol=${ticker}&includeAllRoots=true`, {
+    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
+  });
+  const d = await r.json();
+  return d.expirations.date;
+}
+
+async function getChainRaw(ticker, exp) {
+  const r = await fetch(`${BASE}/markets/options/chains?symbol=${ticker}&expiration=${exp}&greeks=true`, {
+    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
+  });
+  const d = await r.json();
+  return d.options?.option || [];
+}
+
+function calcGEXVal(option, spot) {
+  const gamma = option.greeks?.gamma || 0;
+  const oi = option.open_interest || 0;
+  const mult = option.option_type === "put" ? -1 : 1;
+  return gamma * oi * 100 * spot * spot * mult / 1e9;
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+/*
+  SCORING LOGIC v4 — "3-Step Method": Box + Discount + Volume
+
+  This drops delta/theta/value-at-wall entirely per user direction.
+  Replaces it with the actual method from the source PDF:
+
+  1. BOX: strike must sit between current spot and the nearest gamma wall
+     in that direction (calls look toward nearest wall above, puts toward
+     nearest wall below) — this is the "box" zone.
+  2. DISCOUNT: contract's change_percentage (vs previous close, straight
+     from Tradier's quote data) must be -70% or worse. Closer to -100%
+     ranks higher within the surviving group.
+  3. VOLUME: among contracts that pass gates 1 and 2, the one with the
+     HIGHEST volume wins — exactly the $520 (78K vol) beats $519 (8K vol)
+     example from the method, same setup, pick the more active strike.
+
+  No delta/theta/OI floor/premium band — those were dropped intentionally.
+*/
+function scoreContracts(options, spot, gexByStrike) {
+  const wallStrikesAbove = Object.keys(gexByStrike).map(Number).filter(s => s > spot).sort((a,b)=>a-b);
+  const wallStrikesBelow = Object.keys(gexByStrike).map(Number).filter(s => s < spot).sort((a,b)=>b-a);
+  const nearestWallAbove = wallStrikesAbove[0];
+  const nearestWallBelow = wallStrikesBelow[0];
+
+  const minDiscount = -70; // percent — "70% or worse" per the method
+
+  const candidates = { call: [], put: [] };
+  const rejected = { notInBox: 0, notDiscounted: 0, missingData: 0 };
+
+  options.forEach(opt => {
+    const ask = opt.ask || 0;
+    const premium = ask > 0 ? ask : (opt.last || 0);
+    const changePct = opt.change_percentage;
+
+    if (premium <= 0 || changePct == null) { rejected.missingData++; return; }
+
+    const isCall = opt.option_type === 'call';
+
+    // BOX GATE — strike must sit between spot and the relevant wall
+    let inBox = false;
+    if (isCall && nearestWallAbove != null) {
+      inBox = opt.strike >= spot && opt.strike <= nearestWallAbove;
+    } else if (!isCall && nearestWallBelow != null) {
+      inBox = opt.strike <= spot && opt.strike >= nearestWallBelow;
+    }
+    if (!inBox) { rejected.notInBox++; return; }
+
+    // DISCOUNT GATE — must be down 70% or worse from previous close
+    if (changePct > minDiscount) { rejected.notDiscounted++; return; }
+
+    const vol = opt.volume || 0;
+    const oi = opt.open_interest || 0;
+
+    candidates[isCall ? 'call' : 'put'].push({
+      strike: opt.strike,
+      premium,
+      changePct,
+      vol,
+      oi,
+      targetWall: isCall ? nearestWallAbove : nearestWallBelow
+    });
+  });
+
+  // Sort by volume descending — highest volume wins among the box+discount qualifiers
+  candidates.call.sort((a,b) => b.vol - a.vol);
+  candidates.put.sort((a,b) => b.vol - a.vol);
+
+  return {
+    bestCall: candidates.call[0] || null,
+    bestPut: candidates.put[0] || null,
+    altCalls: candidates.call.slice(1, 4),
+    altPuts: candidates.put.slice(1, 4),
+    rejected
+  };
+}
+
+function renderAltList(alts, type) {
+  if (!alts || alts.length === 0) return '';
+  let html = `<div class="alt-list"><div class="alt-list-title">Other qualifying ${type === 'call' ? 'calls' : 'puts'} (lower volume):</div>`;
+  alts.forEach(a => {
+    html += `<div class="alt-row"><span class="strike">$${a.strike}</span><span>${a.changePct.toFixed(0)}% · Vol ${a.vol.toLocaleString()}</span></div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderPickCard(pick, type, alts) {
+  if (!pick) {
+    return `<div class="pick-card ${type}"><h3>${type === 'call' ? '📈 BEST CALL' : '📉 BEST PUT'}</h3>
+      <div class="no-pick">Nothing in the box is down 70%+ right now — check rejection summary below.</div></div>`;
+  }
+  const wallLabel = `$${pick.targetWall}`;
+  return `
+    <div class="pick-card ${type}">
+      <h3>${type === 'call' ? '📈 BEST CALL' : '📉 BEST PUT'} — $${pick.strike}</h3>
+      <div class="pick-row"><span class="l">Buy at</span><span class="v">$${pick.premium.toFixed(2)}</span></div>
+      <div class="pick-row"><span class="l">Discount</span><span class="v discount">${pick.changePct.toFixed(0)}%</span></div>
+      <div class="pick-row"><span class="l">Volume</span><span class="v highlight">${pick.vol.toLocaleString()}</span></div>
+      <div class="pick-row"><span class="l">Open Interest</span><span class="v">${pick.oi.toLocaleString()}</span></div>
+      <div class="pick-row"><span class="l">Box target (wall)</span><span class="v" style="color:${type==='call'?'#3fb950':'#f85149'}">${wallLabel}</span></div>
+      ${renderAltList(alts, type)}
+    </div>
+  `;
+}
+
+async function runDeepDive() {
+  const ticker = document.getElementById("ob-ticker").value.trim().toUpperCase();
+  if (!ticker) return;
+
+  const statusEl = document.getElementById("ob-status");
+  const resultsEl = document.getElementById("ob-results");
+  statusEl.textContent = `Scanning ${ticker} 0DTE chain...`;
+  resultsEl.innerHTML = `<div class="loading">Crunching contracts... ⏳</div>`;
+
+  try {
+    const [spot, expirations] = await Promise.all([getQuoteRaw(ticker), getExpirationsRaw(ticker)]);
+    const today = todayStr();
+    const expToUse = expirations.includes(today) ? today : expirations[0];
+    const chain = await getChainRaw(ticker, expToUse);
+
+    const gexByStrike = {};
+    chain.forEach(opt => {
+      const g = calcGEXVal(opt, spot);
+      gexByStrike[opt.strike] = (gexByStrike[opt.strike] || 0) + g;
+    });
+
+    const { bestCall, bestPut, altCalls, altPuts, rejected } = scoreContracts(chain, spot, gexByStrike);
+
+    const isLive = expToUse === today;
+    const expNote = isLive ? "0DTE (today)" : `Nearest available: ${expToUse} (no 0DTE listed right now)`;
+
+    resultsEl.innerHTML = `
+      <div class="best-pick">
+        ${renderPickCard(bestCall, 'call', altCalls)}
+        ${renderPickCard(bestPut, 'put', altPuts)}
+      </div>
+      <div class="method-note">
+        Expiry: ${expNote} · Spot: $${spot} · Box = between spot and nearest gamma wall · Discount = -70% or worse vs prior close · Winner = highest volume among qualifiers.<br>
+        "Discount" is the contract's change from previous close (Tradier's change_percentage field), not necessarily from today's intraday peak.<br>
+        Rejected: ${rejected.notInBox} outside the box, ${rejected.notDiscounted} not discounted enough, ${rejected.missingData} missing data.
+      </div>
+    `;
+
+    statusEl.textContent = `✅ ${ticker} — scanned ${chain.length} contracts from ${expToUse}`;
+
+  } catch (err) {
+    resultsEl.innerHTML = `<div class="error">❌ Error: ${err.message}</div>`;
+    statusEl.textContent = "Error loading data";
+  }
+}
+
 function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll(".mode-btn").forEach(b => {
@@ -198,36 +445,10 @@ function setMode(mode) {
   if (lastData) buildAndShowTradeRec(lastData.spot, lastData.gexByStrike, lastData.expirations);
 }
 
-async function getQuote(ticker) {
-  const r = await fetch(`${BASE}/markets/quotes?symbols=${ticker}`, {
-    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
-  });
-  const d = await r.json();
-  return d.quotes.quote.last;
-}
-
-async function getExpirations(ticker) {
-  const r = await fetch(`${BASE}/markets/options/expirations?symbol=${ticker}&includeAllRoots=true`, {
-    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
-  });
-  const d = await r.json();
-  return d.expirations.date;
-}
-
-async function getChain(ticker, exp) {
-  const r = await fetch(`${BASE}/markets/options/chains?symbol=${ticker}&expiration=${exp}&greeks=true`, {
-    headers: { Authorization: `Bearer ${TRADIER_TOKEN}`, Accept: "application/json" }
-  });
-  const d = await r.json();
-  return d.options?.option || [];
-}
-
-function calcGEX(option, spot) {
-  const gamma = option.greeks?.gamma || 0;
-  const oi = option.open_interest || 0;
-  const mult = option.option_type === "put" ? -1 : 1;
-  return gamma * oi * 100 * spot * spot * mult / 1e9;
-}
+async function getQuote(ticker) { return getQuoteRaw(ticker); }
+async function getExpirations(ticker) { return getExpirationsRaw(ticker); }
+async function getChain(ticker, exp) { return getChainRaw(ticker, exp); }
+function calcGEX(option, spot) { return calcGEXVal(option, spot); }
 
 function getStrength(absGex) {
   if (absGex >= 3) return { label: "EXTREME", cls: "extreme" };
@@ -275,10 +496,8 @@ function switchTab(tab) {
   document.querySelectorAll(".tab").forEach((t,i) => {
     t.classList.toggle("active", ["gex","oi","volume","walls"][i] === tab);
   });
-
   const legend = document.getElementById("legend");
   const tradeRec = document.getElementById("trade-rec");
-
   if (tab === "walls") {
     legend.style.display = "none";
     tradeRec.style.display = "none";
@@ -287,7 +506,8 @@ function switchTab(tab) {
   } else {
     legend.style.display = "flex";
     document.getElementById("output").style.display = "block";
-    document.getElementById("walls-view") && (document.getElementById("walls-view").style.display = "none");
+    const wv = document.getElementById("walls-view");
+    if (wv) wv.style.display = "none";
     if (lastData) {
       renderTable(lastData);
       buildAndShowTradeRec(lastData.spot, lastData.gexByStrike, lastData.expirations);
@@ -296,17 +516,11 @@ function switchTab(tab) {
 }
 
 function renderWalls(data) {
-  const { spot, gexByStrike, strikeMap, expirations } = data;
-
-  // Remove old walls view
+  const { spot, gexByStrike, strikeMap } = data;
   const old = document.getElementById("walls-view");
   if (old) old.remove();
 
-  // Sort by absolute GEX — top 5
-  const top5 = Object.entries(gexByStrike)
-    .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]))
-    .slice(0, 5);
-
+  const top5 = Object.entries(gexByStrike).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 5);
   const resCount = top5.filter(([s]) => Number(s) > spot).length;
   const supCount = top5.filter(([s]) => Number(s) <= spot).length;
 
@@ -328,7 +542,6 @@ function renderWalls(data) {
   top5.forEach(([strike, gex], i) => {
     const s = Number(strike);
     const isRes = s > spot;
-    const isSup = s <= spot;
     const type = isRes ? "res" : "sup";
     const typeLabel = isRes ? "↗ RES" : "↘ SUP";
     const distPct = (((s - spot) / spot) * 100).toFixed(2);
@@ -337,7 +550,6 @@ function renderWalls(data) {
     const isPrimary = i === 0;
     const rankCls = `rank-${i+1}`;
 
-    // Get call/put OI and volume across all expirations
     let callOI = 0, putOI = 0, callVol = 0, putVol = 0;
     if (strikeMap[s]) {
       Object.values(strikeMap[s]).forEach(cell => {
@@ -357,31 +569,14 @@ function renderWalls(data) {
         <div class="wall-price ${type}">$${s}</div>
         <div class="wall-dist">${distLabel}</div>
         <div class="wall-strength-label">STRENGTH</div>
-        <div class="wall-strength-bar">
-          <div class="wall-strength-fill ${strength.cls}"></div>
-        </div>
+        <div class="wall-strength-bar"><div class="wall-strength-fill ${strength.cls}"></div></div>
         <div class="wall-strength-text ${strength.cls}">${strength.label}</div>
         <div class="wall-stats">
-          <div class="wall-stat-row">
-            <span class="wlabel">NET GEX</span>
-            <span class="wval ${gex > 0 ? 'pos' : 'neg'}">${fmtB(gex)}</span>
-          </div>
-          <div class="wall-stat-row">
-            <span class="wlabel">● CALL OI</span>
-            <span class="wval pos">${fmtK(callOI)}</span>
-          </div>
-          <div class="wall-stat-row">
-            <span class="wlabel">● PUT OI</span>
-            <span class="wval neg">${fmtK(putOI)}</span>
-          </div>
-          <div class="wall-stat-row">
-            <span class="wlabel">TOTAL OI</span>
-            <span class="wval neu">${fmtK(totalOI)}</span>
-          </div>
-          <div class="wall-stat-row">
-            <span class="wlabel">VOLUME</span>
-            <span class="wval neu">${fmtK(totalVol)}</span>
-          </div>
+          <div class="wall-stat-row"><span class="wlabel">NET GEX</span><span class="wval ${gex > 0 ? 'pos' : 'neg'}">${fmtB(gex)}</span></div>
+          <div class="wall-stat-row"><span class="wlabel">● CALL OI</span><span class="wval pos">${fmtK(callOI)}</span></div>
+          <div class="wall-stat-row"><span class="wlabel">● PUT OI</span><span class="wval neg">${fmtK(putOI)}</span></div>
+          <div class="wall-stat-row"><span class="wlabel">TOTAL OI</span><span class="wval neu">${fmtK(totalOI)}</span></div>
+          <div class="wall-stat-row"><span class="wlabel">VOLUME</span><span class="wval neu">${fmtK(totalVol)}</span></div>
         </div>
       </div>
     `;
@@ -612,4 +807,3 @@ async function analyze() {
 </script>
 </body>
 </html>
-
